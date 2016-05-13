@@ -1,8 +1,7 @@
 import re
 import string
 
-escapeables = 
-[
+escapeables = [
 	('<.*?>', 'tag'),
 	('%[diuoxXfFeEgGaAcspn]','var'),
 	('%\([word]*\)[diuoxXfFeEgGaAcspn]','var'),
@@ -25,6 +24,12 @@ class text_fragment:
             scrap - untranslatable non-letter characters
             other
     """
+
+#    def __str__(self):
+#        return self.string
+#    def __getitem__(self):
+#        return self.string
+
     def __init__(self,string,flag="pending"):
         
         assert flag in ["word", "pending", "tag", "var", "exist", "scrap", "other"]
@@ -33,27 +38,30 @@ class text_fragment:
         self.flag = flag
         self.new_string = "" # FIXME is this real?
 
-        def __str__(self):
-            return self.string
-
-def split_string (source_fragment, target):
+def split_string (source_fragment):
+    assert source_fragment.flag == "pending"
     original = [source_fragment]
-    print(original)
+    print(source_fragment.string)
 
     # New compile
     for reg, flag in escapeables:
         compiled = re.compile(reg)
         derivative = []
-        for index, fragment in enumerate(original): #FIXME check for translateability
+
+        for i in original: print (i.string)
+
+        for index, fragment in enumerate(original):
+            if fragment.flag != "pending":
+                derivative.append(fragment)
+                continue
             subfragments = []
             start = 0
             for pattern in compiled.finditer(fragment.string):
-	            pattern_end = pattern.start() + len(pattern.group())
-	            subfragments.append( text_fragment( fragment[start:pattern.start()], "pending" ) )
-	            subfragments.append( text_fragment( fragment[pattern.start():pattern_end], flag) )
-	            start = pattern_end
+                pattern_end = pattern.start() + len(pattern.group())
+                subfragments.append( text_fragment( fragment.string[start:pattern.start()], "pending" ) )
+                subfragments.append( text_fragment( fragment.string[pattern.start():pattern_end], flag) )
+                start = pattern_end
             subfragments.append(text_fragment( fragment.string[start:len(fragment.string)]))
-
             derivative += subfragments
         original = derivative
-            
+    return original
