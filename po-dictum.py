@@ -65,3 +65,17 @@ def split_string (source_fragment):
             derivative += subfragments
         original = derivative
     return original
+    
+    # Remove accelerator
+    if accelerator != '': # And if it is warranted
+        # Psudocode
+        accel_count = 0
+        accel_char = ''
+        for fragment in (i for i in original if i.flag == "pending"):
+            if fragment.string.find(accelerator) != -1:
+                accel_count += 1
+        if accel_count == 1:
+            
+        # if count == 1:
+        #    remove accelerator
+        #    save char after accelerator
