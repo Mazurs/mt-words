@@ -6,7 +6,7 @@ escapeables = [
 	('%[diuoxXfFeEgGaAcspn]','var'),
 	('%\([word]*\)[diuoxXfFeEgGaAcspn]','var'),
 	('%[0-9]\$[diuoxXfFeEgGaAcspn]','var'),
-	('&\w*;','var'), # FIXME Mozilla vars can contain dots
+	('&[\w|\.]*;','var'), # FIXME Mozilla vars can contain dots
 	('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+','other'),
     ('\s&\s','other'),
 ]
