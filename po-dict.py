@@ -122,7 +122,7 @@ class dict_translate:
         c_named = re.compile('%\([word]*\)[diuoxXfFeEgGaAcspn]')
         c_moved = re.compile('%[0-9]\$[diuoxXfFeEgGaAcspn]')
         # Escape Mozilla variables
-        m_standart = re.compile('&\w*;')
+        m_standart = re.compile('&[\w|.]+;')
         # Escape URLs
         url = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
         # Escape some other weirdness
