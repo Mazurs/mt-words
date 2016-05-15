@@ -264,6 +264,8 @@ class dict_translate:
         f = codecs.open('dictionary_new', encoding = 'utf-8', mode='w')
         for key in sorted(self.dictionary.iterkeys()):
             f.write(key + " " + self.dictionary[key] + u"\n")
+        for item in self.new_words:
+            f.write(item + " " + u"\n")
         f.close()
         return tostore
 
