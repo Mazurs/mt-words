@@ -41,7 +41,8 @@ class word_substitute:
     """Worker that does dictionary replacement"""
 
     def __init__ (self, dictionary_file, project = "GNOME", missing=None):
-        self.table = dictionary (dictionary_file)
+        #self.table = dictionary (dictionary_file)
+        self.table = {"tips":[{"tranlsation":"taps"}]}
         # TODO implement missing word list
         self.project = project # TODO later extract behaviour
 
@@ -113,6 +114,32 @@ class word_substitute:
         for t in target_fragments:
             output += t.text
         unit.settarget(output)
+
+    def convertstore(self, fromstore):
+        tostore = type(fromstore)()
+        for unit in fromstore.units:
+            if not unit.istranslatable():
+                continue
+            # Skip translator credits TODO puti in fn
+            if unit.getsource() == "translator-credits":
+                continue
+            if unit.getsource() == "Your names" and unit.getcontext() == "NAME OF TRANSLATORS":
+                continue
+            if unit.getsource() == "Your emails" and unit.getcontext() == "EMAIL OF TRANSLATORS":
+                continue
+            if unit.getsource() == "":
+                continue
+            newunit = unit # FIXME wuy?
+            newunit = self.substitute(newunit)
+            tostore.addunit(newunit)
+        #append new words in dictionary file
+        # f = codecs.open('dictionary_new', encoding = 'utf-8', mode='w')
+        # for key in sorted(self.dictionary.iterkeys()):
+        #     f.write(key + " " + self.dictionary[key] + u"\n")
+        # for item in self.new_words:
+        #     f.write(item + " " + u"\n")
+        # f.close()
+        return tostore
 
 def exclude (original, exclude, flag):
     if type(original) is str:
@@ -195,10 +222,11 @@ def restore_case(word, s_type):
     return word
 
 def mtfile(inputfile, outputfile, templatefile, dictionary):
+    from translate.storage import factory
     inputstore = factory.getobject(inputfile)
-    if inputstore.isempty():
+    if inputstore.isempty(): #FIXME this check should not be necessary
         return 0
-    convertor = dict_translate(dictionary)
+    convertor = word_substitute(dictionary)
     outputstore = convertor.convertstore(inputstore)
     outputfile.write(str(outputstore))
     return 1

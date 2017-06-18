@@ -280,7 +280,7 @@ def mtfile(inputfile,
            trans_tag=False
            ):
     if (not dictionary):
-	dictionary = "dictionary";
+        dictionary = "dictionary";
     """reads in inputfile, segments it then, writes to outputfile"""
     # note that templatefile is not used, but it is required by the converter...
     inputstore = factory.getobject(inputfile)
