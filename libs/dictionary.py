@@ -26,7 +26,7 @@ class dictionary:
         """Return word in dictionary and if it needs review"""
         options = self.dictionary.get(word)
         if (options):
-            return best_translation(options)
+            return self.best_translation(options)
         else:
             self.add(word)
             print ("WARNING: dictionary has no entry for " + word)
@@ -80,4 +80,4 @@ class dictionary:
         """Write untranslated words into empty dictionary file, if such words exist"""
         xml = self.untranslated_xml()
         if xml:
-            with open(empty_dict_file, "w") as f: f.write(xml.encode('UTF-8'))
+            with open(empty_dict_file, "w") as f: f.write(xml)
