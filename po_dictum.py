@@ -109,11 +109,7 @@ class word_substitute:
                     break
 
         # Collapse
-
-        output = ""
-        for t in target_fragments:
-            output += t.text
-        unit.settarget(output)
+        unit.settarget( fragments_to_string(target_fragments) )
 
     def convertstore(self, fromstore):
         tostore = type(fromstore)()
@@ -220,6 +216,12 @@ def restore_case(word, s_type):
         return word[0:1].upper() + word[1:]
     # Case with 'weird' capitalization is omitted
     return word
+
+def fragments_to_string(fragments):
+    output = str()
+    for f in fragments:
+        output += f.text
+    return output
 
 def mtfile(inputfile, outputfile, templatefile, dictionary):
     from translate.storage import factory

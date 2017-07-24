@@ -32,7 +32,7 @@ class TestRemoveAcceleratorFromFragment(unittest.TestCase):
         self.assertEqual(p.remove_accel('Sveiks', '_'),None)
         self.assertEqual(p.remove_accel('&Sveiks', '&'),('S','Sveiks'))
 
-class TestPlaseAcceleratorIntoFragment(unittest.TestCase):
+class TestPlaceAcceleratorIntoFragment(unittest.TestCase):
 
     def test_place_at_beginning(self):
         self.assertEqual(p.place_accel('Sveiks', 'S', '_'),('_Sveiks'))
@@ -72,6 +72,16 @@ class TestRemoveAcceleratorFromListOfFragments(unittest.TestCase):
         self.assertEqual(frag_list[0].text,"_neaiztiec")
         self.assertEqual(frag_list[0].found_accelerator,False)
         self.assertEqual(acc_char,None)
+
+class TestConvertFragmentsToString(unittest.TestCase):
+    def test_empty_fragments_to_empty_string(self):
+        self.assertEqual(p.fragments_to_string([]),"")
+
+    def test_trivial_fragment_to_string(self):
+        self.assertEqual(p.fragments_to_string([p.fragment("Saule")]),"Saule")
+
+    def test_multiple_fragments_to_string(self):
+        self.assertEqual(p.fragments_to_string([p.fragment("Saule"),p.fragment("!!")]),"Saule!!")
 
 if __name__ == '__main__':
     unittest.main()
