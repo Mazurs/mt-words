@@ -83,5 +83,12 @@ class TestConvertFragmentsToString(unittest.TestCase):
     def test_multiple_fragments_to_string(self):
         self.assertEqual(p.fragments_to_string([p.fragment("Saule"),p.fragment("!!")]),"Saule!!")
 
+class TestExcludeRegExStrings(unittest.TestCase):
+
+    def test_exclude_from_simple_string(self):
+        #p.exclude(original, exclude, flag)
+        #print (p.exclude("a,b,c", ",", "scrap") )
+        print (p.excl("a,b,c", ",", "scrap") )
+
 if __name__ == '__main__':
     unittest.main()

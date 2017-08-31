@@ -37,6 +37,28 @@ class fragment:
         self.new_text = "" # FIXME is this real?
         self.found_accelerator = False
 
+class MyClass:
+    """Container for string fragments.
+    Attributes:
+        text: fragment of translation text
+        flag:   status of the text, possible values:
+            word - translateable word
+            pending - potentially translateable word
+            tag - untranslatable tag name or attribute
+            var - untranslatable variable
+            exist - untranslatable, because exists
+            scrap - untranslatable non-letter characters
+            other
+    """
+    def __init__(self,text,flag="pending"):
+
+        assert flag in ["word", "pending", "tag", "var", "exist", "scrap", "other"]
+
+        self.text = text
+        self.flag = flag
+        self.new_text = "" # FIXME is this real?
+        self.found_accelerator = False
+
 class word_substitute:
     """Worker that does dictionary replacement"""
 
@@ -137,24 +159,39 @@ class word_substitute:
         # f.close()
         return tostore
 
+def excl(frag, pattern, flag):
+    if type(frag) is str:
+        frag = [fragment(frag)]
+    if type(pattern) is list:
+        for p in pattern:
+            excl(frag,p,flag)
+
+    pattern = re.compile(pattern)
+
+    output = list()
+    for f in frag:
+        if f.flag != "pending":
+            output.append(f)
+            continue
+        subfrags = list()
+        # TO BE CONTINUED
+
+
 def exclude (original, exclude, flag):
+    import po_dictum as pu# FIXME wait wut?
     if type(original) is str:
-        given = [fragment(original)]
+        given = [pu.fragment(original)]
     elif type (original) is list:
         given = original
-    else:
-        given = [original]
 
     if type(exclude) is not list:
         exclude = [exclude]
-    #print(source_fragment.text)
 
     # New compile
     for reg in escapeables:
         compiled = re.compile(reg)
         derivative = []
 
-        for i in given: print (i.text)
 
         for index, fragment in enumerate(given):
             if fragment.flag != "pending":
