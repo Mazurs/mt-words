@@ -2,7 +2,7 @@ import re
 import string
 
 #from libs.dictionary import dictionary
-from libs import dictionary
+#from libs import dictionary
 
 # List of elements, that contains untranslatable strings
 escapeables = [
@@ -34,37 +34,16 @@ class fragment:
 
         self.text = text
         self.flag = flag
-        self.new_text = "" # FIXME is this real?
-        self.found_accelerator = False
-
-class MyClass:
-    """Container for string fragments.
-    Attributes:
-        text: fragment of translation text
-        flag:   status of the text, possible values:
-            word - translateable word
-            pending - potentially translateable word
-            tag - untranslatable tag name or attribute
-            var - untranslatable variable
-            exist - untranslatable, because exists
-            scrap - untranslatable non-letter characters
-            other
-    """
-    def __init__(self,text,flag="pending"):
-
-        assert flag in ["word", "pending", "tag", "var", "exist", "scrap", "other"]
-
-        self.text = text
-        self.flag = flag
-        self.new_text = "" # FIXME is this real?
         self.found_accelerator = False
 
 class word_substitute:
     """Worker that does dictionary replacement"""
 
-    def __init__ (self, dictionary_file, project = "GNOME", missing=None):
+    def __init__ (self, dictionary, project = "GNOME", missing=None):
         #self.table = dictionary (dictionary_file)
-        self.table = {"tips":[{"tranlsation":"taps"}]}
+        self.table = dict();
+        if isinstance(dictionary, dict):
+            self.table = dictionary
         # TODO implement missing word list
         self.project = project # TODO later extract behaviour
 
@@ -89,46 +68,17 @@ class word_substitute:
 
         # Mark duplicates
 
-        for t in target_fragments:
-            if t.flag == "word":
-                for s in source_fragments:
-                    if s.flag == "word" and s.text == t.text:
-                        t.flag = "exist"
+        mark_duplicates(source_fragments, target_fragments)
 
         # Replace words
 
-        for t in target_fragments:
-            if t.flag == "word":
-                word_type = identify_case(t.text)
-                translation = self.table.find(t.text.lower())
-                if translation:
-                    t.text = translation
-                else:
-                    unit.markfuzzy()
+        fuzzy = replace_words(target_fragments, self.table)
+        if fuzzy:
+            unit.markfuzzy()
 
         # Put back accelerator FIXME is this really an improvement?
 
-        found = False
-        for t in target_fragments:
-            if t.flag in ["word", "pending", "exist"]:
-                replacement = place_accelerator(t.text, target_char, "_")
-                if replacement:
-                    t.text = replacement
-                    found = True
-                    break
-        if not found:
-            for t in target_fragments:
-                if t.flag in ["word", "pending", "exist"]:
-                    replacement = place_accelerator(t.text, source_char, "_")
-                    if replacement:
-                        t.text = replacement
-                        found = True
-                        break
-        if not found:
-            for t in target_fragments:
-                if t.flag in ["word", "pending", "exist"]:
-                    t.text = "_" + t.text
-                    break
+        restore_accelerator(target_fragments, source_accl, target_accl, "_")
 
         # Collapse
         unit.settarget( fragments_to_string(target_fragments) )
@@ -176,35 +126,34 @@ def excl(frag, pattern, flag):
         subfrags = list()
         # TO BE CONTINUED
 
+#
 
-def exclude (original, exclude, flag):
-    import po_dictum as pu# FIXME wait wut?
+def exclude (original, matching_regex, flag):
     if type(original) is str:
-        given = [pu.fragment(original)]
+        given = [fragment(original)]
     elif type (original) is list:
         given = original
 
-    if type(exclude) is not list:
-        exclude = [exclude]
+    if type(matching_regex) is not list:
+        matching_regex = [matching_regex]
 
     # New compile
-    for reg in escapeables:
+    for reg in matching_regex:
         compiled = re.compile(reg)
         derivative = []
 
-
-        for index, fragment in enumerate(given):
-            if fragment.flag != "pending":
-                derivative.append(fragment)
+        for index, frag in enumerate(given):
+            if frag.flag != "pending":
+                derivative.append(frag)
                 continue
             subfragments = []
             start = 0
-            for pattern in compiled.finditer(fragment.text):
+            for pattern in compiled.finditer(frag.text):
                 pattern_end = pattern.start() + len(pattern.group())
-                subfragments.append( fragment( fragment.text[start:pattern.start()], "pending" ) )
-                subfragments.append( fragment( fragment.text[pattern.start():pattern_end], flag) )
+                subfragments.append( fragment( frag.text[start:pattern.start()], "pending" ) )
+                subfragments.append( fragment( frag.text[pattern.start():pattern_end], flag) )
                 start = pattern_end
-            subfragments.append(fragment( fragment.text[start:len(fragment.text)]))
+            subfragments.append(fragment( frag.text[start:len(frag.text)]))
             derivative += subfragments
         given = derivative
     return derivative
@@ -220,6 +169,51 @@ def remove_accelerator(source_fragments, accelerator):
             f.found_accelerator = True
             break
     return source_fragments, source_char
+
+def mark_duplicates(source_fragments, target_fragments):
+    for t in target_fragments:
+        if t.flag == "word":
+            for s in source_fragments:
+                if s.flag == "word" and s.text == t.text:
+                    t.flag = "exist"
+
+def replace_words(target_fragments, dictionary):
+    fuzzy = False
+    for t in target_fragments:
+        if t.flag == "word":
+            word_type = identify_case(t.text)
+            translation = dictionary.get(t.text.lower())
+            if translation:
+                t.text = restore_case(translation,word_type)
+            else:
+                fuzzy = True
+    return fuzzy
+
+def restore_accelerator(target_fragments, target_accl, source_accl, accel):
+    if target_accl == None or source_accl == None:
+        return
+    found = False
+    for t in target_fragments:
+        if t.flag in ["word", "pending", "exist"]:
+            replacement = place_accel(t.text, target_accl, accel)
+            if replacement:
+                t.text = replacement
+                found = True
+                break
+    if not found:
+        for t in target_fragments:
+            if t.flag in ["word", "pending", "exist"]:
+                replacement = place_accel(t.text, source_accl, accel)
+                if replacement:
+                    t.text = replacement
+                    found = True
+                    break
+    if not found:
+        for t in target_fragments:
+            if t.flag in ["word", "pending", "exist"]:
+                t.text = accel + t.text
+                break
+
 
 def remove_accel(text, accelerator):
     pos = text.find(accelerator)
