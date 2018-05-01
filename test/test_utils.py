@@ -147,6 +147,9 @@ class TestConvertFragmentsToString(unittest.TestCase):
 class TestExcludeRegExStrings(unittest.TestCase):
 
     def test_exclude_from_simple_string(self):
+        print("")
+        print(p.exclude("Wērd1","\w+",          "word"))
+        print(p.exclude("Wērd1","[^\W_0-9]+"   ,"word"))
         #p.exclude(original, exclude, flag)
         #print (p.exclude("a,b,c", ",", "scrap") )
         #print (p.excl("a,b,c", ",", "scrap") )

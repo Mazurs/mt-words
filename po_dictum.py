@@ -36,6 +36,9 @@ class fragment:
         self.flag = flag
         self.found_accelerator = False
 
+    def __repr__(self):
+        return str("'"+self.text+"':"+self.flag)
+
 class word_substitute:
     """Worker that does dictionary replacement"""
 
@@ -63,8 +66,8 @@ class word_substitute:
 
         # Strip out words
 
-        source_fragments = exclude (source_fragments, '[\W]', "word")
-        target_fragments = exclude (target_fragments, '[\W]', "word")
+        source_fragments = exclude (source_fragments, '[^\W_0-9]+', "word")
+        target_fragments = exclude (target_fragments, '[^\W_0-9]+', "word")
 
         # Mark duplicates
 
@@ -78,7 +81,11 @@ class word_substitute:
 
         # Put back accelerator FIXME is this really an improvement?
 
+        # print ("Before :")
+        # print (target_fragments)
         restore_accelerator(target_fragments, source_accl, target_accl, "_")
+        # print ("After :")
+        # print (target_fragments)
 
         # Collapse
         unit.settarget( fragments_to_string(target_fragments) )
@@ -210,7 +217,7 @@ def restore_accelerator(target_fragments, target_accl, source_accl, accel):
                     break
     if not found:
         for t in target_fragments:
-            if t.flag in ["word", "pending", "exist"]:
+            if t.flag in ["word", "pending", "exist"] and t.text:
                 t.text = accel + t.text
                 break
 
