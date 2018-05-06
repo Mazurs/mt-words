@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from xml.etree import ElementTree
 from xml.dom.minidom import parseString
+#from csv import reader
+import csv
 
 class dictionary:
 
@@ -10,7 +12,7 @@ class dictionary:
         self.new = set()
         self.dict_file = dict_file
 
-        if dict_file:
+        if dict_file[-3:] == "xml":
             tree = ElementTree.parse(dict_file)
             root = tree.getroot()
             for child in root:
@@ -21,6 +23,19 @@ class dictionary:
                 else: review = True
 
                 self.add(source,target,review)
+
+        elif dict_file[-3:] == "csv":
+            with open(dict_file, newline='', encoding='utf-8') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                for record in csv_reader:
+                    source = record[0]
+                    target = record[1]
+                    review = record[2] if len(record) > 2 else None
+                    if review == None or review.lower() == "no": review = False
+                    else: review = True
+
+                    self.add(source,target,review)
+
 
     def find(self,word):
         """Return word in dictionary and if it needs review"""
@@ -35,7 +50,7 @@ class dictionary:
     def add(self,word,translation = None, review = False):
         """Add word and its translation (if it exists) to dictionary"""
         if translation == None:
-            self.new.add(word)
+            self.new.add(word) # TODO incorrect logic, first look up
         else:
             node = self.dictionary.get(word)
             if node == None:
@@ -76,8 +91,17 @@ class dictionary:
 
         return parseString(ElementTree.tostring(dic,encoding="UTF-8")).toprettyxml(indent=" ")
 
-    def dump_untranslated(self,empty_dict_file):
+    def dump_untranslated(self,empty_dict_file, format="xml"):
         """Write untranslated words into empty dictionary file, if such words exist"""
-        xml = self.untranslated_xml()
-        if xml:
-            with open(empty_dict_file, "w") as f: f.write(xml)
+        output = str()
+        if format == "xml":
+            output = self.untranslated_xml()
+        elif format == "csv":
+            l = list(self.new)
+            l.sort()
+            for item in l:
+                output += item + "\n"
+
+        if output:
+            with open(empty_dict_file, "w") as f:
+                f.write(output)

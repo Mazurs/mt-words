@@ -88,5 +88,20 @@ class TestSubstitutionWorker(unittest.TestCase):
         self.c.substitute(u)
         self.assertEqual(u.target,"%s_ Fails")
 
+    def test_exclude_variables(self):
+        u=pounit()
+        u.setsource("%s File")
+        u.settarget("%s Datne")
+        self.c.substitute(u)
+        self.assertEqual(u.target,"%s Fails")
+        self.assertEqual(u.isfuzzy(),False)
+
+    def test_exclude_named_variables(self):
+        u=pounit()
+        u.setsource("%(file)s file")
+        u.settarget("%(file)s datne")
+        self.c.substitute(u)
+        self.assertEqual(u.target,"%(file)s fails")
+
 if __name__ == '__main__':
     unittest.main()
