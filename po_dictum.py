@@ -42,11 +42,11 @@ class fragment:
 class word_substitute:
     """Worker that does dictionary replacement"""
 
-    def __init__ (self, dictionary, project = "GNOME", missing=None):
-        #self.table = dictionary (dictionary_file)
-        self.table = dict();
-        if isinstance(dictionary, dict):
-            self.table = dictionary
+    def __init__ (self, dictionary_file, project = "GNOME", missing=None):
+        self.table = dictionary (dictionary_file)
+        # self.table = dict();
+        # if isinstance(dictionary, dict):
+        #     self.table = dictionary
         # TODO implement missing word list
         self.project = project # TODO later extract behaviour
 
@@ -108,6 +108,7 @@ class word_substitute:
             newunit = self.substitute(newunit)
             tostore.addunit(newunit)
         #append new words in dictionary file
+        self.
         # f = codecs.open('dictionary_new', encoding = 'utf-8', mode='w')
         # for key in sorted(self.dictionary.iterkeys()):
         #     f.write(key + " " + self.dictionary[key] + u"\n")
@@ -116,6 +117,7 @@ class word_substitute:
         # f.close()
         return tostore
 
+#FIXME This function is not called
 def excl(frag, pattern, flag):
     if type(frag) is str:
         frag = [fragment(frag)]
@@ -131,7 +133,7 @@ def excl(frag, pattern, flag):
             output.append(f)
             continue
         subfrags = list()
-        # TO BE CONTINUED
+        # TODO TO BE CONTINUED?!?
 
 #
 
@@ -184,15 +186,18 @@ def mark_duplicates(source_fragments, target_fragments):
                 if s.flag == "word" and s.text == t.text:
                     t.flag = "exist"
 
-def replace_words(target_fragments, dictionary):
+def replace_words(target_fragments, translations):
     fuzzy = False
     for t in target_fragments:
         if t.flag == "word":
             word_type = identify_case(t.text)
-            translation = dictionary.get(t.text.lower())
-            if translation:
-                t.text = restore_case(translation,word_type)
-            else:
+            response = translations.find(t.text.lower())
+            if not response:
+                fuzzy = True
+                continue
+            translation, needs_review = response
+            t.text = restore_case(translation,word_type)
+            if needs_review:
                 fuzzy = True
     return fuzzy
 
@@ -261,12 +266,12 @@ def fragments_to_string(fragments):
         output += f.text
     return output
 
-def mtfile(inputfile, outputfile, templatefile, dictionary):
+def mtfile(inputfile, outputfile, templatefile, dictionary_file):
     from translate.storage import factory
     inputstore = factory.getobject(inputfile)
-    if inputstore.isempty(): #FIXME this check should not be necessary
+    if inputstore.isempty():
         return 0
-    convertor = word_substitute(dictionary)
+    convertor = word_substitute(dictionary_file)
     outputstore = convertor.convertstore(inputstore)
     outputfile.write(str(outputstore))
     return 1
@@ -276,9 +281,9 @@ def main():
     from translate.convert import convert
     formats = {"po": ("po", mtfile), "xlf": ("xlf", mtfile), "tmx": ("tmx", mtfile)}
     parser = convert.ConvertOptionParser(formats, usepots=True, description=__doc__)
-    parser.add_option("-d", "--dictionary", dest="dictionary",
-                      help="Dictionary file. Record format: key<tab>translation<newline>")
-    parser.passthrough.append("dictionary")
+    parser.add_option("-d", "--dictionary", dest="dictionary_file",
+                      help="Dictionary file. Record format: key<comma>translation<newline>")
+    parser.passthrough.append("dictionary_file")
     parser.run()
 
 if __name__ == '__main__':

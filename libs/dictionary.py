@@ -24,6 +24,7 @@ class dictionary:
 
                 self.add(source,target,review)
 
+
         elif dict_file[-3:] == "csv":
             with open(dict_file, newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
