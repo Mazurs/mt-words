@@ -1,8 +1,8 @@
 import re
 import string
-
-#from libs.dictionary import dictionary
-#from libs import dictionary
+from translate.storage import factory
+from translate.convert import convert
+from libs.dictionary import dictionary
 
 # List of elements, that contains untranslatable strings
 escapeables = [
@@ -90,6 +90,8 @@ class word_substitute:
         # Collapse
         unit.settarget( fragments_to_string(target_fragments) )
 
+        return unit
+
     def convertstore(self, fromstore):
         tostore = type(fromstore)()
         for unit in fromstore.units:
@@ -108,7 +110,7 @@ class word_substitute:
             newunit = self.substitute(newunit)
             tostore.addunit(newunit)
         #append new words in dictionary file
-        self.
+        #self.
         # f = codecs.open('dictionary_new', encoding = 'utf-8', mode='w')
         # for key in sorted(self.dictionary.iterkeys()):
         #     f.write(key + " " + self.dictionary[key] + u"\n")
@@ -267,18 +269,16 @@ def fragments_to_string(fragments):
     return output
 
 def mtfile(inputfile, outputfile, templatefile, dictionary_file):
-    from translate.storage import factory
     inputstore = factory.getobject(inputfile)
     if inputstore.isempty():
         return 0
     convertor = word_substitute(dictionary_file)
     outputstore = convertor.convertstore(inputstore)
-    outputfile.write(str(outputstore))
+    outputstore.serialize(outputfile)
     return 1
 
 
 def main():
-    from translate.convert import convert
     formats = {"po": ("po", mtfile), "xlf": ("xlf", mtfile), "tmx": ("tmx", mtfile)}
     parser = convert.ConvertOptionParser(formats, usepots=True, description=__doc__)
     parser.add_option("-d", "--dictionary", dest="dictionary_file",

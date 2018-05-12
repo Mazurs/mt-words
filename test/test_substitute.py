@@ -6,7 +6,8 @@ class TestSubstitutionWorker(unittest.TestCase):
 
     def setUp(self):
         table = {"datne":"fails", "logs":"lūgs", "ieiet":"ieīt", "atver":"atvar"}
-        self.c = p.word_substitute(table)
+        #self.c = p.word_substitute(table)
+        self.c = p.word_substitute('test/dictionary_sample.csv')
 
     def test_empty(self):
         u=pounit()
@@ -37,10 +38,10 @@ class TestSubstitutionWorker(unittest.TestCase):
 
     def test_found_in_dictionary(self):
         u=pounit()
-        u.setsource("file")
-        u.settarget("datne")
+        u.setsource("open")
+        u.settarget("atver")
         self.c.substitute(u)
-        self.assertEqual(u.target,"fails")
+        self.assertEqual(u.target,"atvar")
         self.assertEqual(u.isfuzzy(),False)
 
     def test_missing_in_dictionary(self):
@@ -57,7 +58,7 @@ class TestSubstitutionWorker(unittest.TestCase):
         u.settarget("Logs atver datne")
         self.c.substitute(u)
         self.assertEqual(u.target,"Lūgs atvar fails")
-        self.assertEqual(u.isfuzzy(),False)
+        self.assertEqual(u.isfuzzy(),True)
 
     def test_one_found_in_dictionary(self):
         u=pounit()
@@ -90,10 +91,10 @@ class TestSubstitutionWorker(unittest.TestCase):
 
     def test_exclude_variables(self):
         u=pounit()
-        u.setsource("%s File")
-        u.settarget("%s Datne")
+        u.setsource("%s Windows")
+        u.settarget("%s Logs")
         self.c.substitute(u)
-        self.assertEqual(u.target,"%s Fails")
+        self.assertEqual(u.target,"%s Lūgs")
         self.assertEqual(u.isfuzzy(),False)
 
     def test_exclude_named_variables(self):

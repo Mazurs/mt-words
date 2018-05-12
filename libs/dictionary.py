@@ -24,7 +24,6 @@ class dictionary:
 
                 self.add(source,target,review)
 
-
         elif dict_file[-3:] == "csv":
             with open(dict_file, newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
@@ -45,7 +44,7 @@ class dictionary:
             return self.best_translation(options)
         else:
             self.add(word)
-            print ("WARNING: dictionary has no entry for " + word)
+            # print ("WARNING: dictionary has no entry for " + word)
             return None
 
     def add(self,word,translation = None, review = False):
