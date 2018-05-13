@@ -104,5 +104,13 @@ class TestSubstitutionWorker(unittest.TestCase):
         self.c.substitute(u)
         self.assertEqual(u.target,"%(file)s fails")
 
+class TestMtfile(unittest.TestCase):
+
+    def test_po_processing(self):
+        #
+        return
+        ifile = open ('test/example.po','r',encoding = 'utf-8')
+        ofile = open ('test/example_out.po','w',encoding = 'utf-8')
+        p.mtfile(ifile, ofile, None, 'test/dictionary_sample.csv')
 if __name__ == '__main__':
     unittest.main()

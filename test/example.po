@@ -15,5 +15,5 @@ msgstr ""
 "2);\n"
 
 #: ../src/ui/typer.xml:123
-msgid "Type"
-msgstr "Tips"
+msgid "Window"
+msgstr "Logs"
