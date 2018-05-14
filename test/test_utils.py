@@ -1,5 +1,6 @@
 import po_dictum as p
 import unittest
+from libs.dictionary import dictionary
 
 class TestIdentifyType(unittest.TestCase):
 
@@ -102,12 +103,13 @@ class TestWordReplacement(unittest.TestCase):
         #     ]
         # }
     def setUp(self):
-        self.table = {"datne":"fails", "logs":"lūgs", "ieiet":"ieīt"}
+        #self.table = {"datne":"fails", "logs":"lūgs", "ieiet":"ieīt"}
+        self.table = dictionary('test/dictionary_sample.csv')
 
     def test_replace_fragments_success(self):
-        f = [p.fragment("Datne","word"), p.fragment(" "), p.fragment("ieiet","word")]
+        f = [p.fragment("Logs","word"), p.fragment(" "), p.fragment("ieiet","word")]
         fuzzy = p.replace_words(f, self.table)
-        self.assertEqual(f[0].text,"Fails")
+        self.assertEqual(f[0].text,"Lūgs")
         self.assertEqual(fuzzy,False)
 
     def test_replace_fragments_fails(self):
@@ -147,13 +149,13 @@ class TestConvertFragmentsToString(unittest.TestCase):
 class TestExcludeRegExStrings(unittest.TestCase):
 
     def test_exclude_from_simple_string(self):
+        return
         print("")
         print(p.exclude("Wērd1","\w+",          "word"))
         print(p.exclude("Wērd1","[^\W_0-9]+"   ,"word"))
         #p.exclude(original, exclude, flag)
         #print (p.exclude("a,b,c", ",", "scrap") )
         #print (p.excl("a,b,c", ",", "scrap") )
-        pass
 
 if __name__ == '__main__':
     unittest.main()

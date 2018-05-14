@@ -14,7 +14,7 @@ escapeables = [
     'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', # URLs
     '\s&\s', # Mozilla style "and" replacement. FIXME Dubious.
 ]
-# FIXME what is dis?"<*>"
+
 class fragment:
     """Container for string fragments.
     Attributes:
@@ -43,11 +43,9 @@ class word_substitute:
     """Worker that does dictionary replacement"""
 
     def __init__ (self, dictionary_file, project = "GNOME", missing=None):
+        self.dictionary_file = dictionary_file
         self.table = dictionary (dictionary_file)
-        # self.table = dict();
-        # if isinstance(dictionary, dict):
-        #     self.table = dictionary
-        # TODO implement missing word list
+        self.new_words = set()
         self.project = project # TODO later extract behaviour
 
     def substitute (self, unit):
@@ -59,8 +57,6 @@ class word_substitute:
         source_fragments = exclude (source, escapeables, "other")
         target_fragments = exclude (target, escapeables, "other")
 
-        # Remove accelerator
-
         source_fragments, source_accl = remove_accelerator(source_fragments, "_") #FIXME hardcode
         target_fragments, target_accl = remove_accelerator(target_fragments, "_")
 
@@ -69,23 +65,12 @@ class word_substitute:
         source_fragments = exclude (source_fragments, '[^\W_0-9]+', "word")
         target_fragments = exclude (target_fragments, '[^\W_0-9]+', "word")
 
-        # Mark duplicates
-
         mark_duplicates(source_fragments, target_fragments)
 
-        # Replace words
+        fuzzy = replace_words(target_fragments, self.table, self.new_words)
+        if fuzzy: unit.markfuzzy()
 
-        fuzzy = replace_words(target_fragments, self.table)
-        if fuzzy:
-            unit.markfuzzy()
-
-        # Put back accelerator FIXME is this really an improvement?
-
-        # print ("Before :")
-        # print (target_fragments)
         restore_accelerator(target_fragments, source_accl, target_accl, "_")
-        # print ("After :")
-        # print (target_fragments)
 
         # Collapse
         unit.settarget( fragments_to_string(target_fragments) )
@@ -110,34 +95,12 @@ class word_substitute:
             newunit = self.substitute(newunit)
             tostore.addunit(newunit)
         #append new words in dictionary file
-        #self.
-        # f = codecs.open('dictionary_new', encoding = 'utf-8', mode='w')
-        # for key in sorted(self.dictionary.iterkeys()):
-        #     f.write(key + " " + self.dictionary[key] + u"\n")
-        # for item in self.new_words:
-        #     f.write(item + " " + u"\n")
-        # f.close()
+        unused = list(self.new_words)
+        unused.sort()
+        with open('new_words', 'w', encoding='utf-8') as f:
+            for item in unused:
+                print(item, file = f)
         return tostore
-
-#FIXME This function is not called
-def excl(frag, pattern, flag):
-    if type(frag) is str:
-        frag = [fragment(frag)]
-    if type(pattern) is list:
-        for p in pattern:
-            excl(frag,p,flag)
-
-    pattern = re.compile(pattern)
-
-    output = list()
-    for f in frag:
-        if f.flag != "pending":
-            output.append(f)
-            continue
-        subfrags = list()
-        # TODO TO BE CONTINUED?!?
-
-#
 
 def exclude (original, matching_regex, flag):
     if type(original) is str:
@@ -188,13 +151,14 @@ def mark_duplicates(source_fragments, target_fragments):
                 if s.flag == "word" and s.text == t.text:
                     t.flag = "exist"
 
-def replace_words(target_fragments, translations):
+def replace_words(target_fragments, translations, missing = None):
     fuzzy = False
     for t in target_fragments:
         if t.flag == "word":
             word_type = identify_case(t.text)
             response = translations.find(t.text.lower())
             if not response:
+                missing.add(t.text.lower())
                 fuzzy = True
                 continue
             translation, needs_review = response
