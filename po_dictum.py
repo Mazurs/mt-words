@@ -45,7 +45,6 @@ class word_substitute:
     def __init__ (self, dictionary_file, project = "GNOME", missing=None):
         self.dictionary_file = dictionary_file
         self.table = dictionary (dictionary_file)
-        self.new_words = set()
         self.project = project # TODO later extract behaviour
 
     def substitute (self, unit):
@@ -67,7 +66,7 @@ class word_substitute:
 
         mark_duplicates(source_fragments, target_fragments)
 
-        fuzzy = replace_words(target_fragments, self.table, self.new_words)
+        fuzzy = replace_words(target_fragments, self.table)
         if fuzzy: unit.markfuzzy()
 
         restore_accelerator(target_fragments, source_accl, target_accl, "_")
@@ -94,12 +93,9 @@ class word_substitute:
             newunit = unit # FIXME wuy?
             newunit = self.substitute(newunit)
             tostore.addunit(newunit)
-        #append new words in dictionary file
-        unused = list(self.new_words)
-        unused.sort()
-        with open('new_words', 'w', encoding='utf-8') as f:
-            for item in unused:
-                print(item, file = f)
+
+        self.table.dump_all("new_dict.csv")
+
         return tostore
 
 def exclude (original, matching_regex, flag):
@@ -151,14 +147,14 @@ def mark_duplicates(source_fragments, target_fragments):
                 if s.flag == "word" and s.text == t.text:
                     t.flag = "exist"
 
-def replace_words(target_fragments, translations, missing = None):
+def replace_words(target_fragments, translations):
     fuzzy = False
     for t in target_fragments:
         if t.flag == "word":
             word_type = identify_case(t.text)
             response = translations.find(t.text.lower())
             if not response:
-                missing.add(t.text.lower())
+                translations.add(t.text.lower())
                 fuzzy = True
                 continue
             translation, needs_review = response
@@ -226,6 +222,7 @@ def restore_case(word, s_type):
     # Case with 'weird' capitalization is omitted
     return word
 
+# FIXME this is a member function for framgment class
 def fragments_to_string(fragments):
     output = str()
     for f in fragments:

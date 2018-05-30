@@ -10,6 +10,7 @@ class dictionary:
         """Open and read dictionary file"""
         self.dictionary = dict()
         self.new = set()
+        self.old = list()
         self.dict_file = dict_file
 
         if dict_file[-3:] == "xml":
@@ -28,6 +29,7 @@ class dictionary:
             with open(dict_file, newline='', encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file)
                 for record in csv_reader:
+                    self.old.append(record)
                     source = record[0]
                     target = record[1]
                     review = record[2] if len(record) > 2 else None
@@ -105,3 +107,21 @@ class dictionary:
         if output:
             with open(empty_dict_file, "w") as f:
                 f.write(output)
+
+    def dump_all(self,new_dict_file):
+        """Write all words into empty dictionary file, sorted"""
+
+        if new_dict_file[-3:] == "xml":
+            print ("ERROR: Not implemented yet") #FIXME implement
+            return
+        elif new_dict_file[-3:] == "csv":
+            l = list()
+            for word in self.new:
+                l.append([word,None,None])
+            l.extend(self.old)
+            l.sort()
+            with open(new_dict_file, "w") as f:
+                csv_gen = csv.writer(f)
+                for record in l:
+                    csv_gen.writerow(record)
+
