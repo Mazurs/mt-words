@@ -162,7 +162,7 @@ class dict_translate:
                     texts[0] = texts[0][:pos] + texts[0][pos+1:]
         print("Accell: " + str(original))
         #Split by words
-        for texts in original: #FIXME think this over
+        for texts in original:
             current = u""
             if texts[1] != 'p':
                 fragments.append(texts[0])
@@ -317,7 +317,6 @@ def main():
     parser.add_option("", "--translate_tags", dest="trans_tag", action="store_true",
             default=False, help="Translate words in <tags>")
     parser.passthrough.append("trans_tag")
-# Todo: accelerator, variables, tags
     parser.run()
 
 if __name__ == '__main__':

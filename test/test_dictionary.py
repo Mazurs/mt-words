@@ -14,7 +14,7 @@ class TestXmlDictionary(unittest.TestCase):
 
     def test_read(self):
         self.assertGreater(len(self.dic.dictionary), 0)
-        print(self.dic.dictionary)
+        #print(self.dic.dictionary)
         
     def test_find(self):
         self.assertEqual(self.dic.find('abhāzu'), ('abhazu', False))
@@ -54,7 +54,7 @@ class TestCsvDictionary(unittest.TestCase):
         self.assertEqual(self.dic.find('zebra'), None)
 
     def test_find_all(self):
-        self.assertEqual(self.dic.find_all('abos'), ['obūs', 'obejūs'])
+        self.assertEqual(set(self.dic.find_all('abos')), set(['obūs','obejūs']))
 
     def test_dump(self):
         self.dic.add('sīrups')

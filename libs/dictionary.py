@@ -84,7 +84,6 @@ class dictionary:
         if len (self.new) == 0:
             return None
         dic = ElementTree.Element('dict')
-        # TODO write xml comment that instructs user how to read/write/use dictionary
         for word in sorted(self.new):
             child = ElementTree.SubElement(dic, 'term')
             child.set('source',word)

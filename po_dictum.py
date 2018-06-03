@@ -4,99 +4,129 @@ from translate.storage import factory
 from translate.convert import convert
 from libs.dictionary import dictionary
 
-# List of elements, that contains untranslatable strings
-escapeables = [
-    '<.*?>', # Tags
-    '%[diuoxXfFeEgGaAcspn]', # C style variables, simple
-    '%\([word]*\)[diuoxXfFeEgGaAcspn]', # C style variables, named
-    '%[0-9]\$[diuoxXfFeEgGaAcspn]', # C style variables, positions indicated
-    '&[\w|\.]*;', # Mozilla style variables
-    'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', # URLs
-    '\s&\s', # Mozilla style "and" replacement. FIXME Dubious.
-]
+def get_escapeables (project):
+    tag = '<.*?>'
+    url = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+
+    c_var = '%[diuoxXfFeEgGaAcspn]'
+    c_named_var = '%\([word]*\)[diuoxXfFeEgGaAcspn]'
+    c_ordered_var = '%[0-9]\$[diuoxXfFeEgGaAcspn]'
+
+    moz_var = '&[\w|\.]*;'
+
+    curly_var = '{[\w]*}'
+    curly_var2 = '{{\w}}'
+
+    amp_and = '\s&\s'
+
+    common = [tag, url]
+
+    if project == "GNOME":
+        return common + [c_var, c_named_var, c_ordered_var, curly_var]
+    if project == "MOZILLA":
+        return common + [moz_var, curly_var2, amp_and]
+    else:
+        return common
+
+def get_accelerator (project):
+    if project == "GNOME":
+        return '_'
+    if project == "MOZILLA":
+        return '&'
+    if project == "KDE":
+        return '&'
+    else:
+        return '_'
 
 class fragment:
     """Container for string fragments.
     Attributes:
         text: fragment of translation text
-        flag:   status of the text, possible values:
+        flag: status of the text, possible values:
             word - translateable word
             pending - potentially translateable word
-            tag - untranslatable tag name or attribute
-            var - untranslatable variable
+            literal - immutable strings
             exist - untranslatable, because exists
-            scrap - untranslatable non-letter characters
-            other
+        found_accelerator: if accelerator character was found here
     """
     def __init__(self,text,flag="pending"):
 
-        assert flag in ["word", "pending", "tag", "var", "exist", "scrap", "other"]
+        assert flag in ["word", "pending", "literal", "exist"]
 
         self.text = text
         self.flag = flag
         self.found_accelerator = False
 
     def __repr__(self):
-        return str("'"+self.text+"':"+self.flag)
+        a = ""
+        if self.found_accelerator:
+            a = "!"
+        return str("<"+a+self.text+":"+self.flag+">")
 
 class word_substitute:
     """Worker that does dictionary replacement"""
 
-    def __init__ (self, dictionary_file, project = "GNOME", missing=None):
+    def __init__ (self, dictionary_file, project = "GNOME", accelerator=None):
         self.dictionary_file = dictionary_file
         self.table = dictionary (dictionary_file)
-        self.project = project # TODO later extract behaviour
+        self.escapeables = get_escapeables(project)
+        self.accel = get_accelerator(project)
+        if accelerator: self.accel = accelerator
 
     def substitute (self, unit):
         source = unit.getsource()
         target = unit.gettarget()
 
-        # Cut out undesirables FIXME take project into consideration
+        # Cut out immutable substrings
 
-        source_fragments = exclude (source, escapeables, "other")
-        target_fragments = exclude (target, escapeables, "other")
+        source = exclude (unit.getsource(), self.escapeables, "literal")
+        target = exclude (unit.gettarget(), self.escapeables, "literal")
 
-        source_fragments, source_accl = remove_accelerator(source_fragments, "_") #FIXME hardcode
-        target_fragments, target_accl = remove_accelerator(target_fragments, "_")
+
+        source, source_accl = remove_accelerator(source, self.accel)
+        target, target_accl = remove_accelerator(target, self.accel)
 
         # Strip out words
 
-        source_fragments = exclude (source_fragments, '[^\W_0-9]+', "word")
-        target_fragments = exclude (target_fragments, '[^\W_0-9]+', "word")
+        source = exclude (source, '[^\W_0-9]+', "word")
+        target = exclude (target, '[^\W_0-9]+', "word")
 
-        mark_duplicates(source_fragments, target_fragments)
+        mark_duplicates(source, target)
 
-        fuzzy = replace_words(target_fragments, self.table)
+        fuzzy = replace_words(target, self.table)
         if fuzzy: unit.markfuzzy()
 
-        restore_accelerator(target_fragments, source_accl, target_accl, "_")
+        restore_accelerator(target, source_accl, target_accl, self.accel)
 
         # Collapse
-        unit.settarget( fragments_to_string(target_fragments) )
+        unit.settarget( fragments_to_string(target) )
 
         return unit
 
     def convertstore(self, fromstore):
         tostore = type(fromstore)()
         for unit in fromstore.units:
-            if not unit.istranslatable():
-                continue
-            # Skip translator credits TODO puti in fn
-            if unit.getsource() == "translator-credits":
-                continue
-            if unit.getsource() == "Your names" and unit.getcontext() == "NAME OF TRANSLATORS":
-                continue
-            if unit.getsource() == "Your emails" and unit.getcontext() == "EMAIL OF TRANSLATORS":
-                continue
-            if unit.getsource() == "":
-                continue
-            newunit = unit # FIXME wuy?
-            newunit = self.substitute(newunit)
-            tostore.addunit(newunit)
+            # FIXME currently writes two header po files. WHY?
+            if translateable (unit):
+                newunit = self.substitute(unit)
+                tostore.addunit(newunit)
+            else:
+                tostore.addunit(unit)
 
-        self.table.dump_all("new_dict.csv")
+        self.table.dump_all("new_dict.csv") # FIXME configurabel
 
         return tostore
+
+def translateable (unit):
+    if (not unit.istranslatable() or not unit.getsource() or unit.isfuzzy() or
+        not unit.gettarget() or unit.getsource() == "translator-credits"):
+        return False
+    if ((unit.getsource()  == "Your names" and
+         unit.getcontext() == "NAME OF TRANSLATORS") or
+        (unit.getsource()  == "Your emails" and
+         unit.getcontext() == "EMAIL OF TRANSLATORS")):
+        return False
+    return True
 
 def exclude (original, matching_regex, flag):
     if type(original) is str:
@@ -222,7 +252,6 @@ def restore_case(word, s_type):
     # Case with 'weird' capitalization is omitted
     return word
 
-# FIXME this is a member function for framgment class
 def fragments_to_string(fragments):
     output = str()
     for f in fragments:

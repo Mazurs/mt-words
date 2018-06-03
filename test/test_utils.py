@@ -70,7 +70,7 @@ class TestRemoveAcceleratorFromListOfFragments(unittest.TestCase):
         self.assertEqual(acc_char,"r")
 
     def test_fail_to_remove_from_a_specal_fragment(self):
-        l = [p.fragment("_neaiztiec","var")]
+        l = [p.fragment("_neaiztiec","literal")]
         frag_list, acc_char = p.remove_accelerator(l, "_")
         self.assertEqual(frag_list[0].text,"_neaiztiec")
         self.assertEqual(frag_list[0].found_accelerator,False)
