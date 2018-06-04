@@ -1,6 +1,6 @@
 import re
 import string
-from translate.storage import factory
+from translate.storage import factory, po
 from translate.convert import convert
 from libs.dictionary import dictionary
 
@@ -66,9 +66,11 @@ class fragment:
 class word_substitute:
     """Worker that does dictionary replacement"""
 
-    def __init__ (self, dictionary_file, project = "GNOME", accelerator=None):
-        self.dictionary_file = dictionary_file
+    def __init__ (self, dictionary_file, all_words=None, new_words=None,
+                  project="GNOME", accelerator=None):
         self.table = dictionary (dictionary_file)
+        self.all_words = all_words
+        self.new_words = new_words
         self.escapeables = get_escapeables(project)
         self.accel = get_accelerator(project)
         if accelerator: self.accel = accelerator
@@ -104,16 +106,22 @@ class word_substitute:
         return unit
 
     def convertstore(self, fromstore):
-        tostore = type(fromstore)()
+        tostore = po.pofile()
+        tostore.mergeheaders(fromstore)
         for unit in fromstore.units:
-            # FIXME currently writes two header po files. WHY?
-            if translateable (unit):
+            if unit.isheader():
+                pass
+            elif translateable (unit):
                 newunit = self.substitute(unit)
                 tostore.addunit(newunit)
             else:
                 tostore.addunit(unit)
 
-        self.table.dump_all("new_dict.csv") # FIXME configurabel
+        # FIXME is this the wrong place for this?
+        if self.all_words:
+            self.table.dump_all(self.all_words)
+        if self.new_words:
+            self.table.dump_untranslated(self.new_words)
 
         return tostore
 
@@ -221,9 +229,9 @@ def restore_accelerator(target_fragments, target_accl, source_accl, accel):
 
 def remove_accel(text, accelerator):
     pos = text.find(accelerator)
-    if pos != -1:
+    if pos != -1 and (pos+1 != len(text)): # accelerator can't be the last char
         accel_char = text[pos+1] #storing accelerator char
-        return accel_char, text[:pos] + text[pos+1:] #FIXME might fail if accel is last
+        return accel_char, text[:pos] + text[pos+1:]
 
 def place_accel(text, accelerator, symbol):
     acc_pos = text.lower().find(accelerator.lower())
@@ -258,11 +266,15 @@ def fragments_to_string(fragments):
         output += f.text
     return output
 
-def mtfile(inputfile, outputfile, templatefile, dictionary_file):
+def mtfile(inputfile, outputfile, templatefile, dictionary_file, new_words,
+           all_words, project):
+    if not dictionary_file:
+        print ("ERROR: missing dictionary file")
+        return 0
     inputstore = factory.getobject(inputfile)
     if inputstore.isempty():
         return 0
-    convertor = word_substitute(dictionary_file)
+    convertor = word_substitute(dictionary_file,all_words,new_words,project)
     outputstore = convertor.convertstore(inputstore)
     outputstore.serialize(outputfile)
     return 1
@@ -272,8 +284,17 @@ def main():
     formats = {"po": ("po", mtfile), "xlf": ("xlf", mtfile), "tmx": ("tmx", mtfile)}
     parser = convert.ConvertOptionParser(formats, usepots=True, description=__doc__)
     parser.add_option("-d", "--dictionary", dest="dictionary_file",
-                      help="Dictionary file. Record format: key<comma>translation<newline>")
+          help="Dictionary file. Record format: key<comma>translation<newline>")
     parser.passthrough.append("dictionary_file")
+    parser.add_option("-n", "--new_words", dest="new_words",
+          help="File where to write words not found in the dictionary")
+    parser.passthrough.append("new_words")
+    parser.add_option("-a", "--all_words", dest="all_words",
+          help="File where to write the dictionary with new untranslated words")
+    parser.passthrough.append("all_words")
+    parser.add_option("-p", "--project", dest="project",
+          help="What project the translation belongs to. Currently supported provjects are GNOME and MOZILLA")
+    parser.passthrough.append("project")
     parser.run()
 
 if __name__ == '__main__':

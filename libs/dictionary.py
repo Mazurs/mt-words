@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from xml.etree import ElementTree
 from xml.dom.minidom import parseString
-#from csv import reader
 import csv
 
 class dictionary:
@@ -52,7 +51,7 @@ class dictionary:
     def add(self,word,translation = None, review = False):
         """Add word and its translation (if it exists) to dictionary"""
         if translation == None:
-            self.new.add(word) # TODO incorrect logic, first look up
+            self.new.add(word)
         else:
             node = self.dictionary.get(word)
             if node == None:
@@ -92,16 +91,18 @@ class dictionary:
 
         return parseString(ElementTree.tostring(dic,encoding="UTF-8")).toprettyxml(indent=" ")
 
-    def dump_untranslated(self,empty_dict_file, format="xml"):
+    def dump_untranslated(self,empty_dict_file):
         """Write untranslated words into empty dictionary file, if such words exist"""
         output = str()
-        if format == "xml":
+        if empty_dict_file[-3:] == "xml":
             output = self.untranslated_xml()
-        elif format == "csv":
+        elif empty_dict_file[-3:] == "csv":
             l = list(self.new)
             l.sort()
             for item in l:
                 output += item + "\n"
+        else:
+            print ("ERROR: Invalid file extention. Must be csv or xml")
 
         if output:
             with open(empty_dict_file, "w") as f:
@@ -123,4 +124,4 @@ class dictionary:
                 csv_gen = csv.writer(f)
                 for record in l:
                     csv_gen.writerow(record)
-
+        print ("ERROR: Invalid file extention. Must be csv or xml")

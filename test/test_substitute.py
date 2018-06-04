@@ -107,7 +107,7 @@ class TestSubstitutionWorker(unittest.TestCase):
 class TestMtfile(unittest.TestCase):
 
     def test_po_processing(self):
-        #
+        #perhaps this tests is too implementation specific. Dunno.
         return
         ifile = open ('test/example.po','r',encoding = 'utf-8')
         ofile = open ('test/example_out.po','w',encoding = 'utf-8')
