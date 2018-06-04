@@ -2,6 +2,7 @@ import re
 import string
 from translate.storage import factory, po
 from translate.convert import convert
+from translate.misc.multistring import multistring # why you hate me?
 from libs.dictionary import dictionary
 
 the_dictionary = None
@@ -115,6 +116,19 @@ class word_substitute:
         unit.settarget( fragments_to_string(target) )
 
         return unit
+    def mutli_substitute (self, unit):
+        sources = list()
+        print (unit.source.strings)
+        print (unit.target.strings)
+        for source in unit.source.strings:
+            sources.append(str(source))
+        targets = list()
+        for target in unit.target.strings:
+            targets.append(str(target))
+
+        print (sources)
+        print (targets)
+        quit()
 
     def convertstore(self, fromstore):
         tostore = po.pofile()
@@ -123,8 +137,11 @@ class word_substitute:
             if unit.isheader():
                 pass
             elif translateable (unit):
-                newunit = self.substitute(unit)
-                tostore.addunit(newunit)
+                if unit.hasplural():
+                    tostore.addunit(self.mutli_substitute(unit))
+                    pass
+                else:
+                    tostore.addunit(self.substitute(unit))
             else:
                 tostore.addunit(unit)
 
