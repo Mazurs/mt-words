@@ -124,4 +124,5 @@ class dictionary:
                 csv_gen = csv.writer(f)
                 for record in l:
                     csv_gen.writerow(record)
-        print ("ERROR: Invalid file extention. Must be csv or xml")
+        else:
+            print ("ERROR: Invalid file extention. Must be csv or xml")

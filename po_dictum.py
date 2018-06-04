@@ -4,6 +4,10 @@ from translate.storage import factory, po
 from translate.convert import convert
 from libs.dictionary import dictionary
 
+the_dictionary = None
+the_new_words = None
+the_all_words = None
+
 def get_escapeables (project):
     tag = '<.*?>'
     url = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
@@ -68,9 +72,14 @@ class word_substitute:
 
     def __init__ (self, dictionary_file, all_words=None, new_words=None,
                   project="GNOME", accelerator=None):
-        self.table = dictionary (dictionary_file)
-        self.all_words = all_words
-        self.new_words = new_words
+        global the_dictionary
+        global the_new_words
+        global the_all_words
+        if not the_dictionary:
+            the_dictionary = dictionary (dictionary_file)
+        self.table = the_dictionary
+        if not the_new_words: the_new_words = new_words
+        if not the_all_words: the_all_words = all_words
         self.escapeables = get_escapeables(project)
         self.accel = get_accelerator(project)
         if accelerator: self.accel = accelerator
@@ -80,10 +89,12 @@ class word_substitute:
         target = unit.gettarget()
 
         # Cut out immutable substrings
-
-        source = exclude (unit.getsource(), self.escapeables, "literal")
-        target = exclude (unit.gettarget(), self.escapeables, "literal")
-
+        try:
+            source = exclude (unit.getsource(), self.escapeables, "literal")
+            target = exclude (unit.gettarget(), self.escapeables, "literal")
+        except:
+            unit.markfuzzy()
+            return unit
 
         source, source_accl = remove_accelerator(source, self.accel)
         target, target_accl = remove_accelerator(target, self.accel)
@@ -95,7 +106,7 @@ class word_substitute:
 
         mark_duplicates(source, target)
 
-        fuzzy = replace_words(target, self.table)
+        fuzzy = replace_words(target, the_dictionary)
         if fuzzy: unit.markfuzzy()
 
         restore_accelerator(target, source_accl, target_accl, self.accel)
@@ -117,12 +128,6 @@ class word_substitute:
             else:
                 tostore.addunit(unit)
 
-        # FIXME is this the wrong place for this?
-        if self.all_words:
-            self.table.dump_all(self.all_words)
-        if self.new_words:
-            self.table.dump_untranslated(self.new_words)
-
         return tostore
 
 def translateable (unit):
@@ -136,11 +141,16 @@ def translateable (unit):
         return False
     return True
 
+#TODO add multistring support
 def exclude (original, matching_regex, flag):
     if type(original) is str:
         given = [fragment(original)]
     elif type (original) is list:
         given = original
+    else:
+        #<class 'translate.misc.multistring.multistring'>
+        #print ("Sorry, no plural forms supported :/")
+        raise -1
 
     if type(matching_regex) is not list:
         matching_regex = [matching_regex]
@@ -178,6 +188,7 @@ def remove_accelerator(source_fragments, accelerator):
             break
     return source_fragments, source_char
 
+#TODO multistring
 def mark_duplicates(source_fragments, target_fragments):
     for t in target_fragments:
         if t.flag == "word":
@@ -185,6 +196,7 @@ def mark_duplicates(source_fragments, target_fragments):
                 if s.flag == "word" and s.text == t.text:
                     t.flag = "exist"
 
+#TODO multistring
 def replace_words(target_fragments, translations):
     fuzzy = False
     for t in target_fragments:
@@ -201,6 +213,7 @@ def replace_words(target_fragments, translations):
                 fuzzy = True
     return fuzzy
 
+#TODO multistring
 def restore_accelerator(target_fragments, target_accl, source_accl, accel):
     if target_accl == None or source_accl == None:
         return
@@ -260,6 +273,7 @@ def restore_case(word, s_type):
     # Case with 'weird' capitalization is omitted
     return word
 
+#TODO multistring
 def fragments_to_string(fragments):
     output = str()
     for f in fragments:
@@ -296,6 +310,11 @@ def main():
           help="What project the translation belongs to. Currently supported provjects are GNOME and MOZILLA")
     parser.passthrough.append("project")
     parser.run()
+
+    if the_all_words:
+        the_dictionary.dump_all(the_all_words)
+    if the_new_words:
+        the_dictionary.dump_untranslated(the_new_words)
 
 if __name__ == '__main__':
     main()
