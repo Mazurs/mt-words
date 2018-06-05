@@ -71,36 +71,28 @@ class fragment:
 class word_substitute:
     """Worker that does dictionary replacement"""
 
-    def __init__ (self, dictionary_file, all_words=None, new_words=None,
-                  project="GNOME", accelerator=None):
+    def __init__ (self, dictionary_file, all_words, new_words,
+                  project, accelerator=None):
         global the_dictionary
         global the_new_words
         global the_all_words
-        if not the_dictionary:
-            the_dictionary = dictionary (dictionary_file)
-        self.table = the_dictionary
-        if not the_new_words: the_new_words = new_words
-        if not the_all_words: the_all_words = all_words
+        if not the_dictionary:the_dictionary = dictionary (dictionary_file)
+        if not the_new_words: the_new_words  = new_words
+        if not the_all_words: the_all_words  = all_words
         self.escapeables = get_escapeables(project)
         self.accel = get_accelerator(project)
         if accelerator: self.accel = accelerator
 
     def substitute (self, unit):
-        source = unit.getsource()
-        target = unit.gettarget()
-
         # Cut out immutable substrings
-        try:
-            source = exclude (unit.getsource(), self.escapeables, "literal")
-            target = exclude (unit.gettarget(), self.escapeables, "literal")
-        except:
-            unit.markfuzzy()
-            return unit
+
+        source = exclude (unit.getsource(), self.escapeables, "literal")
+        target = exclude (unit.gettarget(), self.escapeables, "literal")
 
         source, source_accl = remove_accelerator(source, self.accel)
         target, target_accl = remove_accelerator(target, self.accel)
 
-        # Strip out words
+        # Mark dem words
 
         source = exclude (source, '[^\W_0-9]+', "word")
         target = exclude (target, '[^\W_0-9]+', "word")
@@ -116,19 +108,50 @@ class word_substitute:
         unit.settarget( fragments_to_string(target) )
 
         return unit
+
     def mutli_substitute (self, unit):
         sources = list()
-        print (unit.source.strings)
-        print (unit.target.strings)
         for source in unit.source.strings:
             sources.append(str(source))
         targets = list()
         for target in unit.target.strings:
             targets.append(str(target))
 
-        print (sources)
-        print (targets)
-        quit()
+        for idx, source in enumerate(sources):
+            sources[idx] = exclude (source, self.escapeables, "literal")
+        for idx, target in enumerate(targets):
+            targets[idx] = exclude (target, self.escapeables, "literal")
+
+        # TODO remove accelerator intelligently
+
+        for idx, source in enumerate(sources):
+            sources[idx] = exclude (source, '[^\W_0-9]+', "word")
+        for idx, target in enumerate(targets):
+            targets[idx] = exclude (target, '[^\W_0-9]+', "word")
+
+        mark_duplicates(sources[0], targets[0])
+        for target in targets[1:]:
+            mark_duplicates(sources[1], target)
+
+        for idx, target in enumerate(targets):
+            fuzzy = replace_words(target, the_dictionary)
+            if fuzzy: unit.markfuzzy()
+            targets[idx] = target
+
+        # TODO restore_accelerator()
+
+        #print (unit.target.strings)
+
+        rets = list()
+        for target in targets:
+            rets.append (fragments_to_string(target))
+        unit.target = multistring(rets)
+        return unit
+        # print (rets)
+        # print (unit.target.strings)
+        # print (sources)
+        #print (targets)
+        # quit()
 
     def convertstore(self, fromstore):
         tostore = po.pofile()
@@ -139,7 +162,6 @@ class word_substitute:
             elif translateable (unit):
                 if unit.hasplural():
                     tostore.addunit(self.mutli_substitute(unit))
-                    pass
                 else:
                     tostore.addunit(self.substitute(unit))
             else:
@@ -167,6 +189,7 @@ def exclude (original, matching_regex, flag):
     else:
         #<class 'translate.misc.multistring.multistring'>
         #print ("Sorry, no plural forms supported :/")
+        print (type(original))
         raise -1
 
     if type(matching_regex) is not list:
@@ -191,7 +214,11 @@ def exclude (original, matching_regex, flag):
             subfragments.append(fragment( frag.text[start:len(frag.text)]))
             derivative += subfragments
         given = derivative
-    return derivative
+
+    ret = list() # removing empty fragments
+    for e in derivative:
+        if e.text != "": ret.append(e)
+    return ret
 
 def remove_accelerator(source_fragments, accelerator):
     source_char = None
