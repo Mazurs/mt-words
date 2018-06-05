@@ -109,6 +109,7 @@ class word_substitute:
 
         return unit
 
+    # TODO this is ugly. Make it less horrible
     def mutli_substitute (self, unit):
         sources = list()
         for source in unit.source.strings:
@@ -122,14 +123,18 @@ class word_substitute:
         for idx, target in enumerate(targets):
             targets[idx] = exclude (target, self.escapeables, "literal")
 
-        # TODO remove accelerator intelligently
+        # If accel char chages between plural forms, someone is being difficult
+        for idx, source in enumerate(sources):
+            sources[idx], source_accl = remove_accelerator(source, self.accel)
+        for idx, target in enumerate(targets):
+            targets[idx], target_accl = remove_accelerator(target, self.accel)
 
         for idx, source in enumerate(sources):
             sources[idx] = exclude (source, '[^\W_0-9]+', "word")
         for idx, target in enumerate(targets):
             targets[idx] = exclude (target, '[^\W_0-9]+', "word")
 
-        mark_duplicates(sources[0], targets[0])
+        mark_duplicates(sources[0], targets[0]) #TODO check if assumption holds
         for target in targets[1:]:
             mark_duplicates(sources[1], target)
 
@@ -138,20 +143,14 @@ class word_substitute:
             if fuzzy: unit.markfuzzy()
             targets[idx] = target
 
-        # TODO restore_accelerator()
-
-        #print (unit.target.strings)
+        for target in targets:
+            restore_accelerator(target, source_accl, target_accl, self.accel)
 
         rets = list()
         for target in targets:
             rets.append (fragments_to_string(target))
         unit.target = multistring(rets)
         return unit
-        # print (rets)
-        # print (unit.target.strings)
-        # print (sources)
-        #print (targets)
-        # quit()
 
     def convertstore(self, fromstore):
         tostore = po.pofile()
