@@ -19,7 +19,7 @@ class dictionary:
                 source = child.attrib['source']
                 target = child.attrib['target']
                 review = child.get('review')
-                if review == None or review.lower() == "no": review = False
+                if not review or review.lower() == "no": review = False
                 else: review = True
 
                 self.add(source,target,review)
@@ -32,7 +32,7 @@ class dictionary:
                     source = record[0]
                     target = record[1]
                     review = record[2] if len(record) > 2 else None
-                    if review == None or review.lower() == "no": review = False
+                    if not review or review.lower() == "no": review = False
                     else: review = True
 
                     self.add(source,target,review)
