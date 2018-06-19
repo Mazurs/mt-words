@@ -9,12 +9,12 @@ the_dictionary = None
 the_new_words = None
 the_all_words = None
 
-def get_escapeables (project):
+def get_escapeables (project, flags = None):
     tag = '<.*?>'
     url = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
     c_var = '%[diuoxXfFeEgGaAcspn]'
-    c_named_var = '%\([word]*\)[diuoxXfFeEgGaAcspn]'
+    c_named_var = '%\([word]*\)[diuoxXfFeEgGaAcspn]' # FIXME this is PYTON!
     c_ordered_var = '%[0-9]\$[diuoxXfFeEgGaAcspn]'
 
     moz_var = '&[\w|\.]*;'
@@ -25,6 +25,13 @@ def get_escapeables (project):
     amp_and = '\s&\s'
 
     common = [tag, url]
+
+    if ("c-format" in flags and not "no-c-format" in flags):
+        # http://pubs.opengroup.org/onlinepubs/007904975/functions/fprintf.html
+        # look into /usr/share/vim/vim81/syntax/po.vim
+        # % (ordering) (flags) (? .\d ?) (length mods) (variable types)
+        # don't forget %%
+        numeric = "['\-+ #0]?[h|hh|l|ll|j|z|t|L]?[diuoxXfFeEgGcCsSpn]"
 
     if project == "GNOME":
         return common + [c_var, c_named_var, c_ordered_var, curly_var]
@@ -94,7 +101,7 @@ class word_substitute:
 
         # Mark dem words
 
-        source = exclude (source, '[^\W_0-9]+', "word")
+        source = exclude (source, '[^\W_0-9]+', "word") # The magic 7
         target = exclude (target, '[^\W_0-9]+', "word")
 
         mark_duplicates(source, target)
