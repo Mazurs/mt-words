@@ -112,7 +112,7 @@ class dictionary:
         """Write all words into empty dictionary file, sorted"""
 
         if new_dict_file[-3:] == "xml":
-            print ("ERROR: Not implemented yet") #FIXME implement
+            print ("ERROR: Not implemented yet") #TODO implement
             return
         elif new_dict_file[-3:] == "csv":
             l = list()

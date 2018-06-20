@@ -13,9 +13,9 @@ def get_escapeables (project, flags = None):
     tag = '<.*?>'
     url = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
-    c_var = '%[diuoxXfFeEgGaAcspn]'
-    c_named_var = '%\([word]*\)[diuoxXfFeEgGaAcspn]' # FIXME this is PYTON!
-    c_ordered_var = '%[0-9]\$[diuoxXfFeEgGaAcspn]'
+    python_named_var = '%\([word]*\)[diuoxXfFeEgGaAcspn]' # FIXME this is PYTON!
+
+    # FIXME date formats? no-c-format
 
     moz_var = '&[\w|\.]*;'
 
@@ -26,26 +26,29 @@ def get_escapeables (project, flags = None):
 
     common = [tag, url]
 
+    variables = list()
+
     if ("c-format" in flags and not "no-c-format" in flags):
         # http://pubs.opengroup.org/onlinepubs/007904975/functions/fprintf.html
         # look into /usr/share/vim/vim81/syntax/po.vim
         # % (ordering) (flags) (? .\d ?) (length mods) (variable types)
-        # don't forget %%
-        numeric = "['\-+ #0]?[h|hh|l|ll|j|z|t|L]?[diuoxXfFeEgGcCsSpn]"
+        # TODO check if c-format regex is anywhere near correct
+        prefix = "%(\d\$)?['\-+ #0]*"
+        c_var = prefix + "[h|hh|l|ll|j|z|t|L]?[diuoxXf]"
+        c_var2= prefix + "[FeEgGcCsSpn]"
+        variables.extend([c_var, c_var2])
 
     if project == "GNOME":
         return common + [c_var, c_named_var, c_ordered_var, curly_var]
     if project == "MOZILLA":
         return common + [moz_var, curly_var2, amp_and]
     else:
-        return common
+        return common + variables
 
 def get_accelerator (project):
     if project == "GNOME":
         return '_'
-    if project == "MOZILLA":
-        return '&'
-    if project == "KDE":
+    if project == "MOZILLA" or project == "KDE":
         return '&'
     else:
         return '_'
