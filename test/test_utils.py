@@ -148,14 +148,31 @@ class TestConvertFragmentsToString(unittest.TestCase):
 
 class TestExcludeRegExStrings(unittest.TestCase):
 
-    def test_exclude_from_simple_string(self):
-        return
+    def NO_test_exclude_from_simple_string(self):
         print("")
         print(p.exclude("Wērd1","\w+",          "word"))
         print(p.exclude("Wērd1","[^\W_0-9]+"   ,"word"))
         #p.exclude(original, exclude, flag)
         #print (p.exclude("a,b,c", ",", "scrap") )
         #print (p.excl("a,b,c", ",", "scrap") )
+
+class TestExcludeAllTheThings(unittest.TestCase):
+
+    def NO_test_null(self):
+        f = p.exclude(" %1$ lls ", "%(\d\$)?['\-+ #0]?(ll|l)?[sS]", "literal")
+        #print (f)
+
+    def test_exclude_simple_c_variable(self):
+        msg = "Simple %s string"
+        f = p.exclude(msg, p.get_escapeables(flags="c-format"), "literal")
+        self.assertEqual(len(f),3)
+        self.assertEqual(f[1].text,"%s")
+
+    def test_exclude_flagged_c_variable(self):
+        msg = "Complex % 'llu string"
+        f = p.exclude(msg, p.get_escapeables(flags="c-format"), "literal")
+        self.assertEqual(len(f),3)
+        self.assertEqual(f[1].text,"% 'llu")
 
 if __name__ == '__main__':
     unittest.main()

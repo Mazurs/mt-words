@@ -9,7 +9,7 @@ the_dictionary = None
 the_new_words = None
 the_all_words = None
 
-def get_escapeables (project, flags = None):
+def get_escapeables (project = None, flags = None):
     tag = '<.*?>'
     url = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
@@ -28,15 +28,17 @@ def get_escapeables (project, flags = None):
 
     variables = list()
 
-    if ("c-format" in flags and not "no-c-format" in flags):
+    if ("c-format" in flags and not "no-c-format" in flags and
+        not "objc-format" in flags):
         # http://pubs.opengroup.org/onlinepubs/007904975/functions/fprintf.html
         # look into /usr/share/vim/vim81/syntax/po.vim
         # % (ordering) (flags) (? .\d ?) (length mods) (variable types)
         # TODO check if c-format regex is anywhere near correct
+        # FIXME %% is a must, alas
         prefix = "%(\d\$)?['\-+ #0]*"
-        c_var = prefix + "[h|hh|l|ll|j|z|t|L]?[diuoxXf]"
+        c_var = prefix + "(h|hh|l|ll|j|z|t|L)?[diuoxXf]"
         c_var2= prefix + "[FeEgGcCsSpn]"
-        variables.extend([c_var, c_var2])
+        variables.extend(["%%", c_var, c_var2])
 
     if project == "GNOME":
         return common + [c_var, c_named_var, c_ordered_var, curly_var]
