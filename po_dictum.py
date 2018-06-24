@@ -13,8 +13,6 @@ def get_escapeables (project = None, flags = None):
     tag = '<.*?>'
     url = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
-    python_named_var = '%\([word]*\)[diuoxXfFeEgGaAcspn]' # FIXME this is PYTON!
-
     # FIXME date formats? no-c-format
 
     moz_var = '&[\w|\.]*;'
@@ -28,17 +26,28 @@ def get_escapeables (project = None, flags = None):
 
     variables = list()
 
-    if ("c-format" in flags and not "no-c-format" in flags and
-        not "objc-format" in flags):
+    if (("c-format" in flags and not "no-c-format" in flags and
+        not "objc-format" in flags) or
+        ("javascript-format" in flags and not "no-javascript-format" in flags)):
         # http://pubs.opengroup.org/onlinepubs/007904975/functions/fprintf.html
+        # https://github.com/alexei/sprintf.js
         # look into /usr/share/vim/vim81/syntax/po.vim
         # % (ordering) (flags) (? .\d ?) (length mods) (variable types)
-        # TODO check if c-format regex is anywhere near correct
-        # FIXME %% is a must, alas
+        # TODO check correctness
         prefix = "%(\d\$)?['\-+ #0]*"
         c_var = prefix + "(h|hh|l|ll|j|z|t|L)?[diuoxXf]"
         c_var2= prefix + "[FeEgGcCsSpn]"
         variables.extend(["%%", c_var, c_var2])
+    elif ("python-format" in flags and not "no-python-format" in flags):
+        # https://docs.python.org/3/library/stdtypes.html (4.7.2.)
+        variables.append("%(\(\w\))[#0\-+ ]*[hlL]?[diouxXeEfFgGcrsa%]")
+    elif ("python-brace-format" in flags and not "no-python-brace-format" in flags):
+        variables.append("\{.*?\}")
+    elif ("scheme-format" in flags and not "no-scheme-format" in flags):
+        # directive ::= ~{directive-parameter,}[:][@]directive-character
+        # directive-parameter ::= [ [-|+]{0-9}+ | 'character | v | # ]
+        param = "([\-+]?\d+|'.|v|#)"
+        variables.append("~[%s]*[:]?[@]?." % param)
 
     if project == "GNOME":
         return common + [c_var, c_named_var, c_ordered_var, curly_var]
