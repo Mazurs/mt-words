@@ -110,7 +110,7 @@ class dictionary:
             for word in new_words:
                 output += word + "\n"
         else:
-            print ("ERROR: Invalid file extention. Must be csv or xml")
+            print("ERROR: Invalid file extention. Must be csv or xml")
 
         if output:
             with open(empty_dict_file, "w") as f:
@@ -120,7 +120,7 @@ class dictionary:
         """Write all words into empty dictionary file, sorted"""
 
         if new_dict_file[-3:] == "xml":
-            print ("ERROR: Not implemented yet")  # TODO implement
+            print("ERROR: Not implemented yet")  # TODO implement
             return
         elif new_dict_file[-3:] == "csv":
             all_words = list()
@@ -133,4 +133,4 @@ class dictionary:
                 for record in all_words:
                     csv_gen.writerow(record)
         else:
-            print ("ERROR: Invalid file extention. Must be csv or xml")
+            print("ERROR: Invalid file extention. Must be csv or xml")

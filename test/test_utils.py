@@ -172,13 +172,13 @@ class TestExcludeAllTheThings(unittest.TestCase):
 
     def test_exclude_simple_c_variable(self):
         msg = "Simple %s string"
-        f = p.exclude(msg, p.get_escapeables(flags="c-format"), "literal")
+        f = p.exclude(msg, p.escapeables(flags="c-format"), "literal")
         self.assertEqual(len(f), 3)
         self.assertEqual(f[1].text, "%s")
 
     def test_exclude_flagged_c_variable(self):
         msg = "Complex % 'llu string"
-        f = p.exclude(msg, p.get_escapeables(flags="c-format"), "literal")
+        f = p.exclude(msg, p.escapeables(flags="c-format"), "literal")
         self.assertEqual(len(f), 3)
         self.assertEqual(f[1].text, "% 'llu")
 

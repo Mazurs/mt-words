@@ -10,7 +10,9 @@ the_new_words = None
 the_all_words = None
 
 
-def get_escapeables(project=None, flags=""):
+def escapeables(project=None, flags=''):
+    if type(flags) == list:
+        flags = ''.join(flags)
     tag = '<.*?>'
     url = ('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|'
            '(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -104,8 +106,8 @@ class fragment:
 class word_substitute:
     """Worker that does dictionary replacement"""
 
-    def __init__(self, dictionary_file, all_words, new_words,
-                 project, accelerator=None):
+    def __init__(self, dictionary_file, all_words=None, new_words=None,
+                 project=None, accelerator=None):
         global the_dictionary
         global the_new_words
         global the_all_words
@@ -115,16 +117,20 @@ class word_substitute:
             the_new_words = new_words
         if not the_all_words:
             the_all_words = all_words
-        self.escapeables = get_escapeables(project)
+        self.project = project
+        self.escapeables = escapeables(project)
         self.accel = get_accelerator(project)
         if accelerator:
             self.accel = accelerator
 
     def substitute(self, unit):
-        # Cut out immutable substrings
+        flags = unit.allcomments[3]
+        source = unit.getsource()
+        target = unit.gettarget()
 
-        source = exclude(unit.getsource(), self.escapeables, "literal")
-        target = exclude(unit.gettarget(), self.escapeables, "literal")
+        # Cut out immutable substrings
+        source = exclude(source, escapeables(self.project, flags), "literal")
+        target = exclude(target, escapeables(self.project, flags), "literal")
 
         source, source_accl = remove_accelerator(source, self.accel)
         target, target_accl = remove_accelerator(target, self.accel)
@@ -157,9 +163,11 @@ class word_substitute:
             targets.append(str(target))
 
         for idx, source in enumerate(sources):
-            sources[idx] = exclude(source, self.escapeables, "literal")
+            sources[idx] = exclude(source, escapeables(self.project, flags),
+                                   "literal")
         for idx, target in enumerate(targets):
-            targets[idx] = exclude(target, self.escapeables, "literal")
+            targets[idx] = exclude(target, escapeables(self.project, flags),
+                                   "literal")
 
         # If accel char chages between plural forms, someone is being difficult
         for idx, source in enumerate(sources):
@@ -230,7 +238,7 @@ def exclude(original, matching_regex, flag):
     else:
         # <class 'translate.misc.multistring.multistring'>
         # print ("Sorry, no plural forms supported :/")
-        print (type(original))
+        print(type(original))
         raise -1
 
     if type(matching_regex) is not list:
@@ -381,7 +389,7 @@ def fragments_to_string(fragments):
 def mtfile(inputfile, outputfile, templatefile, dictionary_file, new_words,
            all_words, project):
     if not dictionary_file:
-        print ("ERROR: missing dictionary file")
+        print("ERROR: missing dictionary file")
         return 0
     inputstore = factory.getobject(inputfile)
     if inputstore.isempty():

@@ -87,6 +87,7 @@ class TestSubstitutionWorker(unittest.TestCase):
         u = pounit()
         u.setsource("%s Fil_e")
         u.settarget("%s Datn_e")
+        u.allcomments[3].append('#, c-format\n')
         self.c.substitute(u)
         self.assertEqual(u.target, "%s_ Fails")
 

@@ -63,7 +63,7 @@ class TestCsvDictionary(unittest.TestCase):
     def test_dump(self):
         self.dic.add('sīrups')
         self.dic.add('maize')
-        self.dic.dump_untranslated(self.empty_dict, format="csv")
+        self.dic.dump_untranslated(self.empty_dict)
 
         with open(self.empty_dict) as f:
             p = iter(f)
