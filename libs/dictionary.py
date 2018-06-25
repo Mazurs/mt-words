@@ -3,9 +3,10 @@ from xml.etree import ElementTree
 from xml.dom.minidom import parseString
 import csv
 
+
 class dictionary:
 
-    def __init__(self,dict_file):
+    def __init__(self, dict_file):
         """Open and read dictionary file"""
         self.dictionary = dict()
         self.new = set()
@@ -19,10 +20,12 @@ class dictionary:
                 source = child.attrib['source']
                 target = child.attrib['target']
                 review = child.get('review')
-                if not review or review.lower() == "no": review = False
-                else: review = True
+                if not review or review.lower() == "no":
+                    review = False
+                else:
+                    review = True
 
-                self.add(source,target,review)
+                self.add(source, target, review)
 
         elif dict_file[-3:] == "csv":
             with open(dict_file, newline='', encoding='utf-8') as csv_file:
@@ -32,13 +35,14 @@ class dictionary:
                     source = record[0]
                     target = record[1]
                     review = record[2] if len(record) > 2 else None
-                    if not review or review.lower() == "no": review = False
-                    else: review = True
+                    if not review or review.lower() == "no":
+                        review = False
+                    else:
+                        review = True
 
-                    self.add(source,target,review)
+                    self.add(source, target, review)
 
-
-    def find(self,word):
+    def find(self, word):
         """Return word in dictionary and if it needs review"""
         options = self.dictionary.get(word)
         if (options):
@@ -48,20 +52,21 @@ class dictionary:
             # print ("WARNING: dictionary has no entry for " + word)
             return None
 
-    def add(self,word,translation = None, review = False):
+    def add(self, word, translation=None, review=False):
         """Add word and its translation (if it exists) to dictionary"""
-        if translation == None:
+        if translation is None:
             self.new.add(word)
         else:
             node = self.dictionary.get(word)
-            if node == None:
-                self.dictionary[word] = [{"target":translation,"review":review}]
+            if node is None:
+                self.dictionary[word] = [
+                    {"target": translation, "review": review}]
             else:
                 for i in node:
-                    if  i["target"] == translation:
+                    if i["target"] == translation:
                         i["review"] = review
                         return
-                node.append({"target":translation,"review":review})
+                node.append({"target": translation, "review": review})
 
     def find_all(self, word):
         """Returns list of all available translations"""
@@ -71,36 +76,39 @@ class dictionary:
             translations.append(o['target'])
         return translations
 
-    def best_translation(self,options):
-        """Returns first translation, that needs no review (if exists), otherwise just first"""
+    def best_translation(self, options):
+        """Returns first translation, that needs no review (if exists),
+            otherwise just first"""
         for value in options:
             if not value['review']:
-                return value['target'] , value['review']
-        return options[0]['target'] , options[0]['review']
+                return value['target'], value['review']
+        return options[0]['target'], options[0]['review']
 
     def untranslated_xml(self):
         """Return string unicode representation of untranslated words"""
-        if len (self.new) == 0:
+        if len(self.new) == 0:
             return None
         dic = ElementTree.Element('dict')
         for word in sorted(self.new):
             child = ElementTree.SubElement(dic, 'term')
-            child.set('source',word)
-            child.set('target','')
-            child.set('review','no')
+            child.set('source', word)
+            child.set('target', '')
+            child.set('review', 'no')
 
-        return parseString(ElementTree.tostring(dic,encoding="UTF-8")).toprettyxml(indent=" ")
+        return parseString(ElementTree.tostring(dic, encoding="UTF-8")
+                           ).toprettyxml(indent=" ")
 
-    def dump_untranslated(self,empty_dict_file):
-        """Write untranslated words into empty dictionary file, if such words exist"""
+    def dump_untranslated(self, empty_dict_file):
+        """Write untranslated words into empty dictionary file,
+            if such words exist"""
         output = str()
         if empty_dict_file[-3:] == "xml":
             output = self.untranslated_xml()
         elif empty_dict_file[-3:] == "csv":
-            l = list(self.new)
-            l.sort()
-            for item in l:
-                output += item + "\n"
+            new_words = list(self.new)
+            new_words.sort()
+            for word in new_words:
+                output += word + "\n"
         else:
             print ("ERROR: Invalid file extention. Must be csv or xml")
 
@@ -108,21 +116,21 @@ class dictionary:
             with open(empty_dict_file, "w") as f:
                 f.write(output)
 
-    def dump_all(self,new_dict_file):
+    def dump_all(self, new_dict_file):
         """Write all words into empty dictionary file, sorted"""
 
         if new_dict_file[-3:] == "xml":
-            print ("ERROR: Not implemented yet") #TODO implement
+            print ("ERROR: Not implemented yet")  # TODO implement
             return
         elif new_dict_file[-3:] == "csv":
-            l = list()
+            all_words = list()
             for word in self.new:
-                l.append([word,None,None])
-            l.extend(self.old)
-            l.sort()
+                all_words.append([word, None, None])
+            all_words.extend(self.old)
+            all_words.sort()
             with open(new_dict_file, "w") as f:
                 csv_gen = csv.writer(f)
-                for record in l:
+                for record in all_words:
                     csv_gen.writerow(record)
         else:
             print ("ERROR: Invalid file extention. Must be csv or xml")
