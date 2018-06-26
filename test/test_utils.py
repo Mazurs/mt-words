@@ -157,28 +157,28 @@ class TestConvertFragmentsToString(unittest.TestCase):
             [p.fragment("Saule"), p.fragment("!!")]), "Saule!!")
 
 
-class TestExcludeRegExStrings(unittest.TestCase):
+class TestMarkRegExStrings(unittest.TestCase):
 
-    def NO_test_exclude_from_simple_string(self):
+    def NO_test_mark_from_simple_string(self):
         print("")
-        print(p.exclude("Wērd1", "\w+",          "word"))
-        print(p.exclude("Wērd1", "[^\W_0-9]+", "word"))
+        print(p.mark("Wērd1", "\w+",          "word"))
+        print(p.mark("Wērd1", "[^\W_0-9]+", "word"))
 
 
-class TestExcludeAllTheThings(unittest.TestCase):
+class TestMarkAllTheThings(unittest.TestCase):
 
     def NO_test_null(self):
-        f = p.exclude(" %1$ lls ", "%(\d\$)?['\-+ #0]?(ll|l)?[sS]", "literal")
+        f = p.mark(" %1$ lls ", "%(\d\$)?['\-+ #0]?(ll|l)?[sS]", "literal")
 
-    def test_exclude_simple_c_variable(self):
+    def test_mark_simple_c_variable(self):
         msg = "Simple %s string"
-        f = p.exclude(msg, p.escapeables(flags="c-format"), "literal")
+        f = p.mark(msg, p.escapeables(flags="c-format"), "literal")
         self.assertEqual(len(f), 3)
         self.assertEqual(f[1].text, "%s")
 
-    def test_exclude_flagged_c_variable(self):
+    def test_mark_flagged_c_variable(self):
         msg = "Complex % 'llu string"
-        f = p.exclude(msg, p.escapeables(flags="c-format"), "literal")
+        f = p.mark(msg, p.escapeables(flags="c-format"), "literal")
         self.assertEqual(len(f), 3)
         self.assertEqual(f[1].text, "% 'llu")
 
