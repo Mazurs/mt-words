@@ -67,8 +67,8 @@ class TestCsvDictionary(unittest.TestCase):
 
         with open(self.empty_dict) as f:
             p = iter(f)
-            self.assertEqual(next(p), 'maize\n')
-            self.assertEqual(next(p), 'sīrups\n')
+            self.assertEqual(next(p), 'maize,,\n')
+            self.assertEqual(next(p), 'sīrups,,\n')
 
 
 if __name__ == '__main__':

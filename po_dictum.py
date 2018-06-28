@@ -191,7 +191,9 @@ class dictionary:
         self.old = list()
         self.dict_file = dict_file
 
-        if dict_file[-3:] == "xml":
+        if not dict_file:
+            pass
+        elif dict_file[-3:] == "xml":
             tree = ElementTree.parse(dict_file)
             root = tree.getroot()
             for child in root:
@@ -286,9 +288,12 @@ class dictionary:
             new_words = list(self.new)
             new_words.sort()
             for word in new_words:
-                output += word + "\n"
+                output += word + ",,\n"  # FIXME brittle to future changes
         else:
-            print("ERROR: Invalid file extention. Must be csv or xml")
+            new_words = list(self.new)
+            new_words.sort()
+            for word in new_words:
+                output += word + "\n"
 
         if output:
             with open(empty_dict_file, "w") as f:
@@ -595,8 +600,9 @@ def mtfile(inputfile, outputfile, templatefile, dictionary_file, new_words,
            all_words, project):
     """Gathers parameters supplied by the parser in the main(),
     sets up the store conversion"""
-    if not dictionary_file:
-        print("ERROR: missing dictionary file")
+    if not dictionary_file and not all_words and not new_words:
+        print("ERROR: must supply at least one flag: --dictionary, --new_words"
+              "or --all_words")
         return 0
     inputstore = factory.getobject(inputfile)
     if inputstore.isempty():

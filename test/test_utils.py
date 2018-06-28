@@ -1,6 +1,6 @@
 import po_dictum as p
 import unittest
-from libs.dictionary import dictionary
+from po_dictum import dictionary
 
 
 class TestIdentifyType(unittest.TestCase):

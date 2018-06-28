@@ -12,13 +12,41 @@ Ubuntu: apt-get install translate-toolkit
 * dictionary_ltg.csv - the dictionary for the Latgalina (LTG) language
 
 # Usage
-For Mozilla products
+
+## Create new dictionary
+
+To gather translateable words for a new dictionary, run
+```
+./po_dictum.py -i [path-to-po-file] --new_words dictionary.csv
+```
+Open the `dictionary.csv` in your favourite spreadsheet application and
+write translations to the second column. If you believe that the translation
+might cause problems down the line (ambiguity, not a real word, etc.), in the
+third column write `yes`. This will inform script that the string should be
+reviewed and will be marked `fuzzy`.
+
+## Translate programs
+
+To translate po files using the script, run
+```
+./po_dictum.py -i [source] -o [target] --dictionary dictionary.csv
+```
+* `-i` input po file or folder of input po files
+* `-o` output po file or folder of output po files
+* `--dictionary` dictionary file in a format described above
+
+Some other parameters you might find useful:
+
+* `--project [GNOME|MOZILLA]` if project is specified, it can do a better job
+  at translating files.
+* `--new_words` output file with new words not found in the dictionary
+* `--all_words` output file with dictionary, which contains both old and new
+  words; useful for updating the existing dictionary
+
+## For Mozilla products
 ```
 ./po_dictum.py -i lv-po/ -o ltg-po --dictionary dictionary_ltg.csv --project MOZILLA
 ```
-* -i - the input translation files in po format
-* -o - the output folder 
-* --dictionary - the dictionary file to use
-* --project MOZILLA - a flag to use Mozilla specific rules
-* --new_words - output file with new words not found in the dictionary
-* --all_words - output file with dictionary, which contains both old and new words  
+
+Use the `--project MOZILLA`, to properly handle mozilla style variables
+and acceleratrors
