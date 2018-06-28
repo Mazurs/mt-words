@@ -1,4 +1,4 @@
-from libs.dictionary import dictionary
+from po_dictum import dictionary
 import unittest
 import os
 

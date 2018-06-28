@@ -14,7 +14,7 @@ Ubuntu: apt-get install translate-toolkit
 # Usage
 For Mozilla products
 ```
-python po_dictum.py -i lv-po/ -o ltg-po --dictionary dictionary_ltg.csv --project MOZILLA
+./po_dictum.py -i lv-po/ -o ltg-po --dictionary dictionary_ltg.csv --project MOZILLA
 ```
 * -i - the input translation files in po format
 * -o - the output folder 
