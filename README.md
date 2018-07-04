@@ -1,6 +1,12 @@
 # mt-words
 Machine translation script for closely related languages
 
+The script is used for translating software, using an existing translation
+to a related language as a source. It uses dictionary translation, i.e. replaces
+words using a dictionary. Human editor should take a second look, since the
+translation is not perfect, but it reduces the work from “translate the whole
+software” to “create dictionary and fix minor mistakes”.
+
 For this software to work, Tranlate Toolkit project must be installed:
 ```
 Fedora: dnf install translate-toolkit
