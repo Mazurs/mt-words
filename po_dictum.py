@@ -111,6 +111,7 @@ class word_substitute:
     # TODO this is ugly. Make it less horrible
     def mutli_substitute(self, unit):
         """The same as substitue(), but for multistring"""
+        flags = unit.allcomments[3]
         sources = list()
         for source in unit.source.strings:
             sources.append(str(source))
@@ -370,8 +371,7 @@ def escapeables(project=None, flags=''):
     elif (has_flag(flags, 'scheme-format')):
         # directive ::= ~{directive-parameter,}[:][@]directive-character
         # directive-parameter ::= [ [-|+]{0-9}+ | 'character | v | # ]
-        param = "([\-+]?\d+|'.|v|#)"
-        variables.append("~[%s]*[:]?[@]?." % param)
+        variables.append("~([\-+]?\d+|'.|v|#)*[:]?[@]?.")
 
     if project == "GNOME":
         return common + [c_var, c_named_var, c_ordered_var, curly_var]
